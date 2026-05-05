@@ -902,11 +902,175 @@
     .checkout-status.success { color: var(--cyan); }
     .checkout-status.error { color: var(--gold); }
     .support-alt {
+      border: 0;
+      background: transparent;
+      font-family: 'Space Grotesk', sans-serif;
       color: var(--text-low);
       font-size: 0.78rem;
       text-decoration: none;
+      cursor: pointer;
     }
     .support-alt:hover { color: var(--gold); }
+    .support-alt.active { color: var(--gold); }
+
+    .application-panel {
+      margin-top: 34px;
+      padding: 34px;
+      scroll-margin-top: 90px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .application-panel[hidden] { display: none; }
+    .application-panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--cyan), var(--gold));
+    }
+    .application-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+    .application-kicker {
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.64rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .application-header h3 {
+      font-size: clamp(1.35rem, 3vw, 2rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+    .application-header p {
+      color: var(--text-mid);
+      max-width: 620px;
+      font-size: 0.94rem;
+    }
+    .application-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .application-tab {
+      min-height: 42px;
+      border: 1px solid var(--border);
+      background: rgba(8,10,16,0.64);
+      color: var(--text-mid);
+      padding: 0 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .application-tab:hover,
+    .application-tab.active {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      background: rgba(0,229,255,0.08);
+    }
+    .application-form {
+      display: grid;
+      gap: 22px;
+    }
+    .application-fields[hidden] { display: none; }
+    .application-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .application-field {
+      display: grid;
+      gap: 8px;
+    }
+    .application-field.full { grid-column: 1 / -1; }
+    .application-field label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-low);
+    }
+    .application-input,
+    .application-select,
+    .application-textarea {
+      width: 100%;
+      min-width: 0;
+      background: rgba(8,10,16,0.72);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.96rem;
+      padding: 14px 16px;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .application-select {
+      color-scheme: dark;
+    }
+    .application-textarea {
+      resize: vertical;
+      min-height: 116px;
+    }
+    .application-input:focus,
+    .application-select:focus,
+    .application-textarea:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(0,229,255,0.12);
+    }
+    .application-input::placeholder,
+    .application-textarea::placeholder {
+      color: var(--text-low);
+    }
+    .application-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .application-submit {
+      border: 0;
+      background: var(--cyan);
+      color: var(--bg);
+      padding: 15px 28px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .application-submit:hover { transform: translateY(-1px); }
+    .application-submit:disabled {
+      cursor: wait;
+      opacity: 0.62;
+      transform: none;
+    }
+    .application-status {
+      min-height: 22px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--text-mid);
+    }
+    .application-status.success { color: var(--cyan); }
+    .application-status.error { color: var(--gold); }
 
     .waitlist-panel {
       margin-top: 34px;
@@ -1083,6 +1247,10 @@
       .waitlist-panel, .waitlist-form { grid-template-columns: 1fr; }
       .waitlist-panel { padding: 28px; }
       .waitlist-submit { min-height: 52px; }
+      .application-panel { padding: 28px; }
+      .application-header, .application-grid { grid-template-columns: 1fr; }
+      .application-tabs { justify-content: flex-start; }
+      .application-tab { flex: 1 1 120px; }
       .support-amounts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .venues-timeline { grid-template-columns: 1fr; }
       .venues-timeline::before { display: none; }
@@ -1399,14 +1567,14 @@
               <button type="button" class="btn-card" id="monthly-button">Start £49/mo Plan</button>
               <p class="checkout-status" id="monthly-status" role="status" aria-live="polite"></p>
             </div>
-            <a href="mailto:pilot@hattrick.autojack.ai?subject=Busker+Pilot+Application" class="support-alt">Apply by email</a>
+            <button type="button" class="support-alt app-trigger" data-application-type="busker">Apply for the pilot</button>
           </div>
         </div>
         <div class="cta-card reveal">
           <span class="cta-icon">🎪</span>
           <h3>I Programme a Festival</h3>
           <p>Bring Hat Trick to your venue. We'll manage the hardware, the logistics, and the artist onboarding. You provide the performances.</p>
-          <a href="mailto:festivals@hattrick.autojack.ai?subject=Festival+Partnership" class="btn-card">Partner With Us</a>
+          <button type="button" class="btn-card app-trigger" data-application-type="festival">Partner With Us</button>
         </div>
         <div class="cta-card reveal">
           <span class="cta-icon">🤝</span>
@@ -1421,9 +1589,126 @@
             </div>
             <button type="button" class="btn-card" id="checkout-button">Back the Pilot</button>
             <p class="checkout-status" id="checkout-status" role="status" aria-live="polite"></p>
-            <a href="mailto:hello@hattrick.autojack.ai?subject=Supporting+Hat+Trick" class="support-alt">Talk sponsorship</a>
+            <button type="button" class="support-alt app-trigger" data-application-type="supporter">Talk sponsorship</button>
           </div>
         </div>
+      </div>
+      <div class="application-panel reveal" id="application-panel" hidden>
+        <div class="application-header">
+          <div>
+            <span class="application-kicker" id="application-kicker">Busker Pilot</span>
+            <h3 id="application-title">Apply for a Hat Trick pilot kit.</h3>
+            <p id="application-copy">Tell us where you perform, what your festival setup looks like, and what the kit needs to handle.</p>
+          </div>
+          <div class="application-tabs" role="tablist" aria-label="Application type">
+            <button type="button" class="application-tab active" data-application-type="busker">Busker</button>
+            <button type="button" class="application-tab" data-application-type="festival">Festival</button>
+            <button type="button" class="application-tab" data-application-type="supporter">Supporter</button>
+          </div>
+        </div>
+        <form class="application-form" id="application-form">
+          <input type="hidden" name="type" id="application-type" value="busker" />
+          <div class="application-grid">
+            <div class="application-field">
+              <label for="application-name">Name</label>
+              <input class="application-input" id="application-name" name="name" type="text" autocomplete="name" required />
+            </div>
+            <div class="application-field">
+              <label for="application-email">Email</label>
+              <input class="application-input" id="application-email" name="email" type="email" autocomplete="email" required />
+            </div>
+            <div class="application-field">
+              <label for="application-organization">Organisation / artist name</label>
+              <input class="application-input" id="application-organization" name="organization" type="text" autocomplete="organization" />
+            </div>
+            <div class="application-field">
+              <label for="application-location">Base / event location</label>
+              <input class="application-input" id="application-location" name="location" type="text" autocomplete="address-level2" />
+            </div>
+          </div>
+
+          <div class="application-grid application-fields" data-fields="busker">
+            <div class="application-field">
+              <label for="busker-stage-name">Stage name</label>
+              <input class="application-input" id="busker-stage-name" name="stage_name" data-answer type="text" required />
+            </div>
+            <div class="application-field">
+              <label for="busker-festival-plan">Pilot target</label>
+              <select class="application-select" id="busker-festival-plan" name="festival_plan" data-answer required>
+                <option value="">Choose one</option>
+                <option>Brighton Fringe</option>
+                <option>Avignon Off</option>
+                <option>Edinburgh Royal Mile</option>
+                <option>Another street performance pitch</option>
+              </select>
+            </div>
+            <div class="application-field full">
+              <label for="busker-setup">What does your normal street setup look like?</label>
+              <textarea class="application-textarea" id="busker-setup" name="performance_setup" data-answer placeholder="Instrument, amp, pitch style, crowd size, power needs, payment links you already use..." required></textarea>
+            </div>
+            <div class="application-field">
+              <label for="busker-audience">Typical audience size</label>
+              <input class="application-input" id="busker-audience" name="audience_size" data-answer type="text" placeholder="e.g. 50-200 per set" />
+            </div>
+            <div class="application-field">
+              <label for="busker-kit-needs">Anything the kit must handle?</label>
+              <input class="application-input" id="busker-kit-needs" name="kit_needs" data-answer type="text" placeholder="Rain, battery, roaming, QR placement..." />
+            </div>
+          </div>
+
+          <div class="application-grid application-fields" data-fields="festival" hidden>
+            <div class="application-field">
+              <label for="festival-event-name">Event / venue name</label>
+              <input class="application-input" id="festival-event-name" name="event_name" data-answer type="text" required disabled />
+            </div>
+            <div class="application-field">
+              <label for="festival-dates">Dates</label>
+              <input class="application-input" id="festival-dates" name="dates" data-answer type="text" placeholder="e.g. 1-31 May 2026" required disabled />
+            </div>
+            <div class="application-field">
+              <label for="festival-buskers">Expected buskers</label>
+              <input class="application-input" id="festival-buskers" name="expected_buskers" data-answer type="text" placeholder="e.g. 12 rotating pitches" disabled />
+            </div>
+            <div class="application-field">
+              <label for="festival-payments">Current payment setup</label>
+              <input class="application-input" id="festival-payments" name="current_payment_setup" data-answer type="text" placeholder="QR tips, cash buckets, app links..." disabled />
+            </div>
+            <div class="application-field full">
+              <label for="festival-goals">What would make the pilot useful?</label>
+              <textarea class="application-textarea" id="festival-goals" name="goals" data-answer placeholder="Tell us the performance zones, network issues, artist onboarding constraints, and what success looks like." required disabled></textarea>
+            </div>
+          </div>
+
+          <div class="application-grid application-fields" data-fields="supporter" hidden>
+            <div class="application-field">
+              <label for="supporter-type">Support type</label>
+              <select class="application-select" id="supporter-type" name="support_type" data-answer required disabled>
+                <option value="">Choose one</option>
+                <option>Sponsorship</option>
+                <option>Investment</option>
+                <option>Infrastructure partner</option>
+                <option>Press / introductions</option>
+              </select>
+            </div>
+            <div class="application-field">
+              <label for="supporter-budget">Budget / timeline</label>
+              <input class="application-input" id="supporter-budget" name="budget_or_timeline" data-answer type="text" placeholder="Optional" disabled />
+            </div>
+            <div class="application-field full">
+              <label for="supporter-interest">What are you interested in supporting?</label>
+              <textarea class="application-textarea" id="supporter-interest" name="interest" data-answer placeholder="Field tests, kit costs, festival deployment, artist onboarding, connectivity, or strategic help." required disabled></textarea>
+            </div>
+            <div class="application-field full">
+              <label for="supporter-intro">Useful context</label>
+              <textarea class="application-textarea" id="supporter-intro" name="introduction" data-answer placeholder="Who you are, who you can introduce, or what we should know before replying." disabled></textarea>
+            </div>
+          </div>
+
+          <div class="application-actions">
+            <button class="application-submit" type="submit">Send Application</button>
+            <p class="application-status" id="application-status" role="status" aria-live="polite"></p>
+          </div>
+        </form>
       </div>
       <div class="waitlist-panel reveal">
         <div class="waitlist-copy">
@@ -1573,6 +1858,132 @@
         button: checkoutButton,
         status: checkoutStatus,
       });
+    });
+
+    const applicationPanel = document.getElementById('application-panel');
+    const applicationForm = document.getElementById('application-form');
+    const applicationStatus = document.getElementById('application-status');
+    const applicationType = document.getElementById('application-type');
+    const applicationKicker = document.getElementById('application-kicker');
+    const applicationTitle = document.getElementById('application-title');
+    const applicationCopy = document.getElementById('application-copy');
+    const applicationTriggers = document.querySelectorAll('.app-trigger');
+    const applicationTabs = document.querySelectorAll('.application-tab');
+    const applicationFields = document.querySelectorAll('.application-fields');
+    const applicationContent = {
+      busker: {
+        kicker: 'Busker Pilot',
+        title: 'Apply for a Hat Trick pilot kit.',
+        copy:
+          'Tell us where you perform, what your festival setup looks like, and what the kit needs to handle.',
+      },
+      festival: {
+        kicker: 'Festival Partnership',
+        title: 'Bring Hat Trick to your performance zone.',
+        copy:
+          'Share the event dates, street setup, and what would make the pilot useful for your artists.',
+      },
+      supporter: {
+        kicker: 'Pilot Support',
+        title: 'Support the field tests.',
+        copy:
+          'Tell us whether you are thinking sponsorship, investment, infrastructure, press, or strategic introductions.',
+      },
+    };
+
+    function setApplicationType(type, shouldScroll = false) {
+      const content = applicationContent[type] || applicationContent.busker;
+      applicationPanel.hidden = false;
+      applicationPanel.classList.add('visible');
+      applicationType.value = type;
+      applicationKicker.textContent = content.kicker;
+      applicationTitle.textContent = content.title;
+      applicationCopy.textContent = content.copy;
+      applicationStatus.className = 'application-status';
+      applicationStatus.textContent = '';
+
+      applicationTriggers.forEach(trigger => {
+        trigger.classList.toggle(
+          'active',
+          trigger.dataset.applicationType === type
+        );
+      });
+      applicationTabs.forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.applicationType === type);
+      });
+      applicationFields.forEach(group => {
+        const isActive = group.dataset.fields === type;
+        group.hidden = !isActive;
+        group.querySelectorAll('input, select, textarea').forEach(field => {
+          field.disabled = !isActive;
+        });
+      });
+
+      if (shouldScroll) {
+        applicationPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    applicationTriggers.forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        setApplicationType(trigger.dataset.applicationType || 'busker', true);
+      });
+    });
+
+    applicationTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        setApplicationType(tab.dataset.applicationType || 'busker');
+      });
+    });
+
+    applicationForm?.addEventListener('submit', async event => {
+      event.preventDefault();
+      const submit = applicationForm.querySelector('.application-submit');
+      const formData = new FormData(applicationForm);
+      const answers = {};
+
+      applicationForm
+        .querySelectorAll('[data-answer]:not(:disabled)')
+        .forEach(field => {
+          answers[field.name] = field.value;
+        });
+
+      applicationStatus.className = 'application-status';
+      applicationStatus.textContent = 'Sending your application...';
+      submit.disabled = true;
+
+      try {
+        const response = await fetch('/api/apply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: formData.get('type'),
+            name: formData.get('name'),
+            email: formData.get('email'),
+            organization: formData.get('organization'),
+            location: formData.get('location'),
+            source: `hattrick-${formData.get('type')}-application`,
+            answers,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Application failed.');
+        }
+        const currentType = applicationType.value;
+        applicationForm.reset();
+        setApplicationType(currentType);
+        applicationStatus.className = 'application-status success';
+        applicationStatus.textContent = data.email_sent
+          ? `${data.message} Check your inbox for confirmation.`
+          : data.message;
+      } catch (error) {
+        applicationStatus.className = 'application-status error';
+        applicationStatus.textContent =
+          error.message || 'Application failed.';
+      } finally {
+        submit.disabled = false;
+      }
     });
 
     waitlistForm?.addEventListener('submit', async event => {
