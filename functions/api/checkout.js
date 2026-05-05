@@ -2,6 +2,7 @@ const STRIPE_API_VERSION = '2026-02-25.clover';
 const STRIPE_CHECKOUT_URL = 'https://api.stripe.com/v1/checkout/sessions';
 const SUPPORTED_AMOUNTS = new Set([500, 1000, 2500, 5000, 10000, 25000]);
 const SUPPORTED_CURRENCIES = new Set(['gbp']);
+const CHECKOUT_KINDS = new Set(['pilot_support', 'kit_deposit', 'tip_demo']);
 
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -29,6 +30,20 @@ function normalizeAmount(value) {
   return amount;
 }
 
+function normalizeKind(value) {
+  const kind = String(value || 'pilot_support');
+
+  return CHECKOUT_KINDS.has(kind) ? kind : 'pilot_support';
+}
+
+function validateAmountForKind(kind, amount) {
+  if (kind === 'kit_deposit' && amount !== 10000) {
+    return false;
+  }
+
+  return true;
+}
+
 function getCurrency(env) {
   const currency = String(env.STRIPE_CURRENCY || 'gbp').toLowerCase();
 
@@ -36,6 +51,13 @@ function getCurrency(env) {
 }
 
 function getCheckoutCopy(kind) {
+  if (kind === 'kit_deposit') {
+    return {
+      name: 'Hat Trick Pilot Kit Deposit',
+      description: 'Refundable deposit to reserve a free Hat Trick pilot kit.',
+    };
+  }
+
   if (kind === 'tip_demo') {
     return {
       name: 'Hat Trick Demo Tip',
@@ -78,8 +100,9 @@ export async function onRequestPost({ request, env }) {
   }
 
   const amount = normalizeAmount(body.amount);
+  const kind = normalizeKind(body.kind);
 
-  if (!amount) {
+  if (!amount || !validateAmountForKind(kind, amount)) {
     return jsonResponse(
       { success: false, error: 'Choose a supported amount.' },
       400
@@ -87,27 +110,34 @@ export async function onRequestPost({ request, env }) {
   }
 
   const baseUrl = getBaseUrl(request, env);
-  const kind = body.kind === 'tip_demo' ? 'tip_demo' : 'pilot_support';
   const currency = getCurrency(env);
   const copy = getCheckoutCopy(kind);
   const params = new URLSearchParams();
 
   params.set('mode', 'payment');
-  params.set('submit_type', 'donate');
+  params.set('submit_type', kind === 'pilot_support' ? 'donate' : 'pay');
   params.set('client_reference_id', `hattrick:${kind}:${amount}`);
   params.set(
     'success_url',
-    `${baseUrl}/?checkout=success&session_id={CHECKOUT_SESSION_ID}#involved`
+    `${baseUrl}/?checkout=success&checkout_kind=${kind}&session_id={CHECKOUT_SESSION_ID}#involved`
   );
-  params.set('cancel_url', `${baseUrl}/?checkout=cancelled#involved`);
+  params.set(
+    'cancel_url',
+    `${baseUrl}/?checkout=cancelled&checkout_kind=${kind}#involved`
+  );
   params.set('metadata[project]', 'hat-trick');
   params.set('metadata[kind]', kind);
+  params.set('metadata[refundable]', kind === 'kit_deposit' ? 'true' : 'false');
   params.set(
     'metadata[source]',
     String(body.source || 'hattrick-site').slice(0, 80)
   );
   params.set('payment_intent_data[metadata][project]', 'hat-trick');
   params.set('payment_intent_data[metadata][kind]', kind);
+  params.set(
+    'payment_intent_data[metadata][refundable]',
+    kind === 'kit_deposit' ? 'true' : 'false'
+  );
 
   appendLineItem(params, { amount, currency, copy });
 

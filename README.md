@@ -78,9 +78,9 @@ curl -s https://hattrick.autojack.ai/api/signup \
 
 ## Stripe Checkout
 
-The support card uses Stripe-hosted Checkout Sessions for one-time pilot
-support payments. Card and wallet details stay in Stripe; the site only creates
-a Checkout Session and redirects to the returned URL.
+The support and busker cards use Stripe-hosted Checkout Sessions. Card and
+wallet details stay in Stripe; the site only creates a Checkout Session and
+redirects to the returned URL.
 
 Required Pages secret:
 
@@ -94,4 +94,12 @@ Smoke test session creation:
 curl -s https://hattrick.autojack.ai/api/checkout \
   -H "Content-Type: application/json" \
   -d '{"amount":500,"kind":"pilot_support","source":"stripe-smoke"}'
+```
+
+Refundable kit deposit smoke test:
+
+```bash
+curl -s https://hattrick.autojack.ai/api/checkout \
+  -H "Content-Type: application/json" \
+  -d '{"amount":10000,"kind":"kit_deposit","source":"deposit-smoke"}'
 ```

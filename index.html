@@ -1115,8 +1115,8 @@
         <span class="stat-label">Infra Fee</span>
       </div>
       <div class="hero-stat">
-        <span class="stat-num">0</span>
-        <span class="stat-label">Upfront Cost</span>
+        <span class="stat-num">£0</span>
+        <span class="stat-label">Kit Price</span>
       </div>
     </div>
   </section>
@@ -1298,13 +1298,13 @@
     <div class="container">
       <span class="section-tag">Business Model</span>
       <h2 class="section-title">Designed to be fair.<br/>Built to be sustainable.</h2>
-      <p class="section-sub">No upfront cost to the busker. No lock-in. A small infrastructure fee — typically paid by the tipper — covers satellite connectivity and platform costs.</p>
+      <p class="section-sub">No kit purchase for the busker. No lock-in. A refundable pilot deposit can reserve hardware, while the small infrastructure fee — typically paid by the tipper — covers satellite connectivity and platform costs.</p>
       <div class="model-grid">
         <div class="model-card reveal">
           <div class="model-value">£0</div>
-          <div class="model-unit">Upfront cost to busker</div>
+          <div class="model-unit">Kit purchase price</div>
           <h3>Kit ships free</h3>
-          <p>Hardware-leased on a Square-style model. Busker never pays for the kit. No deposits. No contracts.</p>
+          <p>Hardware-leased on a Square-style model. A refundable pilot deposit can protect the kit without turning it into an upfront purchase.</p>
         </div>
         <div class="model-card highlight reveal">
           <div class="model-value">2.5%</div>
@@ -1352,8 +1352,12 @@
         <div class="cta-card reveal">
           <span class="cta-icon">🎸</span>
           <h3>I'm a Busker</h3>
-          <p>Apply for a pilot kit. It ships free. You keep the tips. The tech handles the payment flow — you stay focused on the music.</p>
-          <a href="mailto:pilot@hattrick.autojack.ai?subject=Busker+Pilot+Application" class="btn-card">Apply for a Kit</a>
+          <p>Reserve a pilot kit with a refundable deposit. It still ships free. You keep the tips. The tech handles the payment flow — you stay focused on the music.</p>
+          <div class="support-form">
+            <button type="button" class="btn-card" id="deposit-button">Reserve with £100 Deposit</button>
+            <p class="checkout-status" id="deposit-status" role="status" aria-live="polite"></p>
+            <a href="mailto:pilot@hattrick.autojack.ai?subject=Busker+Pilot+Application" class="support-alt">Apply by email</a>
+          </div>
         </div>
         <div class="cta-card reveal">
           <span class="cta-icon">🎪</span>
@@ -1420,12 +1424,19 @@
 
     const checkoutParams = new URLSearchParams(window.location.search);
     const checkoutStatus = document.getElementById('checkout-status');
-    if (checkoutStatus && checkoutParams.get('checkout') === 'success') {
-      checkoutStatus.className = 'checkout-status success';
-      checkoutStatus.textContent = 'Payment complete. Thank you for backing the pilot.';
-    } else if (checkoutStatus && checkoutParams.get('checkout') === 'cancelled') {
-      checkoutStatus.className = 'checkout-status';
-      checkoutStatus.textContent = 'Checkout cancelled.';
+    const depositStatus = document.getElementById('deposit-status');
+    const checkoutKind = checkoutParams.get('checkout_kind');
+    const checkoutTarget =
+      checkoutKind === 'kit_deposit' ? depositStatus : checkoutStatus;
+    if (checkoutTarget && checkoutParams.get('checkout') === 'success') {
+      checkoutTarget.className = 'checkout-status success';
+      checkoutTarget.textContent =
+        checkoutKind === 'kit_deposit'
+          ? 'Deposit checkout complete. We will follow up about the pilot kit.'
+          : 'Payment complete. Thank you for backing the pilot.';
+    } else if (checkoutTarget && checkoutParams.get('checkout') === 'cancelled') {
+      checkoutTarget.className = 'checkout-status';
+      checkoutTarget.textContent = 'Checkout cancelled.';
     }
 
     const reveals = document.querySelectorAll('.reveal');
@@ -1443,6 +1454,7 @@
     const waitlistStatus = document.getElementById('waitlist-status');
     const amountButtons = document.querySelectorAll('.support-amount');
     const checkoutButton = document.getElementById('checkout-button');
+    const depositButton = document.getElementById('deposit-button');
     let selectedAmount = 2500;
 
     amountButtons.forEach(button => {
@@ -1453,19 +1465,19 @@
       });
     });
 
-    checkoutButton?.addEventListener('click', async () => {
-      checkoutStatus.className = 'checkout-status';
-      checkoutStatus.textContent = 'Opening secure Stripe checkout...';
-      checkoutButton.disabled = true;
+    async function startCheckout({ amount, kind, source, button, status }) {
+      status.className = 'checkout-status';
+      status.textContent = 'Opening secure Stripe checkout...';
+      button.disabled = true;
 
       try {
         const response = await fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            amount: selectedAmount,
-            kind: 'pilot_support',
-            source: 'support-card',
+            amount,
+            kind,
+            source,
           }),
         });
         const data = await response.json();
@@ -1474,10 +1486,30 @@
         }
         window.location.href = data.url;
       } catch (error) {
-        checkoutStatus.className = 'checkout-status error';
-        checkoutStatus.textContent = error.message || 'Checkout failed.';
-        checkoutButton.disabled = false;
+        status.className = 'checkout-status error';
+        status.textContent = error.message || 'Checkout failed.';
+        button.disabled = false;
       }
+    }
+
+    depositButton?.addEventListener('click', () => {
+      startCheckout({
+        amount: 10000,
+        kind: 'kit_deposit',
+        source: 'busker-card',
+        button: depositButton,
+        status: depositStatus,
+      });
+    });
+
+    checkoutButton?.addEventListener('click', () => {
+      startCheckout({
+        amount: selectedAmount,
+        kind: 'pilot_support',
+        source: 'support-card',
+        button: checkoutButton,
+        status: checkoutStatus,
+      });
     });
 
     waitlistForm?.addEventListener('submit', async event => {
