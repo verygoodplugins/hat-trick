@@ -815,6 +815,7 @@
     .cta-card .btn-card {
       display: inline-block;
       border: 1px solid var(--border-c);
+      background: transparent;
       color: var(--cyan);
       padding: 12px 28px;
       font-family: 'Space Grotesk', sans-serif;
@@ -823,9 +824,56 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       text-decoration: none;
+      cursor: pointer;
       transition: background 0.3s, color 0.3s;
     }
     .cta-card:hover .btn-card { background: var(--cyan); color: var(--bg); }
+    .cta-card .btn-card:disabled {
+      cursor: wait;
+      opacity: 0.62;
+    }
+    .support-form {
+      display: grid;
+      gap: 16px;
+      justify-items: center;
+    }
+    .support-amounts {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      width: min(100%, 280px);
+    }
+    .support-amount {
+      min-height: 42px;
+      border: 1px solid var(--border);
+      background: rgba(8,10,16,0.64);
+      color: var(--text-mid);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .support-amount:hover,
+    .support-amount.active {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(255,184,0,0.08);
+    }
+    .checkout-status {
+      min-height: 20px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem;
+      line-height: 1.45;
+      color: var(--text-mid);
+    }
+    .checkout-status.success { color: var(--cyan); }
+    .checkout-status.error { color: var(--gold); }
+    .support-alt {
+      color: var(--text-low);
+      font-size: 0.78rem;
+      text-decoration: none;
+    }
+    .support-alt:hover { color: var(--gold); }
 
     .waitlist-panel {
       margin-top: 34px;
@@ -1002,6 +1050,7 @@
       .waitlist-panel, .waitlist-form { grid-template-columns: 1fr; }
       .waitlist-panel { padding: 28px; }
       .waitlist-submit { min-height: 52px; }
+      .support-amounts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .venues-timeline { grid-template-columns: 1fr; }
       .venues-timeline::before { display: none; }
       .how-flow {
@@ -1316,7 +1365,17 @@
           <span class="cta-icon">🤝</span>
           <h3>I Want to Support</h3>
           <p>Investors, sponsors, and organisations aligned with independent artists' economic rights. Help us scale from three fringe pilots to a global standard.</p>
-          <a href="mailto:hello@hattrick.autojack.ai?subject=Supporting+Hat+Trick" class="btn-card">Get in Touch</a>
+          <div class="support-form" id="support-form">
+            <div class="support-amounts" role="group" aria-label="Pilot support amount">
+              <button type="button" class="support-amount" data-amount="1000">£10</button>
+              <button type="button" class="support-amount active" data-amount="2500">£25</button>
+              <button type="button" class="support-amount" data-amount="5000">£50</button>
+              <button type="button" class="support-amount" data-amount="10000">£100</button>
+            </div>
+            <button type="button" class="btn-card" id="checkout-button">Back the Pilot</button>
+            <p class="checkout-status" id="checkout-status" role="status" aria-live="polite"></p>
+            <a href="mailto:hello@hattrick.autojack.ai?subject=Supporting+Hat+Trick" class="support-alt">Talk sponsorship</a>
+          </div>
         </div>
       </div>
       <div class="waitlist-panel reveal">
@@ -1359,6 +1418,16 @@
       nav.classList.toggle('scrolled', window.scrollY > 60);
     });
 
+    const checkoutParams = new URLSearchParams(window.location.search);
+    const checkoutStatus = document.getElementById('checkout-status');
+    if (checkoutStatus && checkoutParams.get('checkout') === 'success') {
+      checkoutStatus.className = 'checkout-status success';
+      checkoutStatus.textContent = 'Payment complete. Thank you for backing the pilot.';
+    } else if (checkoutStatus && checkoutParams.get('checkout') === 'cancelled') {
+      checkoutStatus.className = 'checkout-status';
+      checkoutStatus.textContent = 'Checkout cancelled.';
+    }
+
     const reveals = document.querySelectorAll('.reveal');
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry, i) => {
@@ -1372,6 +1441,45 @@
 
     const waitlistForm = document.getElementById('waitlist-form');
     const waitlistStatus = document.getElementById('waitlist-status');
+    const amountButtons = document.querySelectorAll('.support-amount');
+    const checkoutButton = document.getElementById('checkout-button');
+    let selectedAmount = 2500;
+
+    amountButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        selectedAmount = Number.parseInt(button.dataset.amount, 10);
+        amountButtons.forEach(option => option.classList.remove('active'));
+        button.classList.add('active');
+      });
+    });
+
+    checkoutButton?.addEventListener('click', async () => {
+      checkoutStatus.className = 'checkout-status';
+      checkoutStatus.textContent = 'Opening secure Stripe checkout...';
+      checkoutButton.disabled = true;
+
+      try {
+        const response = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: selectedAmount,
+            kind: 'pilot_support',
+            source: 'support-card',
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success || !data.url) {
+          throw new Error(data.error || 'Checkout failed.');
+        }
+        window.location.href = data.url;
+      } catch (error) {
+        checkoutStatus.className = 'checkout-status error';
+        checkoutStatus.textContent = error.message || 'Checkout failed.';
+        checkoutButton.disabled = false;
+      }
+    });
+
     waitlistForm?.addEventListener('submit', async event => {
       event.preventDefault();
       const submit = waitlistForm.querySelector('.waitlist-submit');

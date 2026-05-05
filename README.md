@@ -7,6 +7,7 @@ pilot mailing list.
 
 - `index.html` - single-file landing page
 - `functions/api/signup.js` - `POST /api/signup` waitlist endpoint
+- `functions/api/checkout.js` - `POST /api/checkout` Stripe Checkout Session endpoint
 - `functions/lib/email.js` - Hat Trick welcome email template
 - `functions/lib/tokens.js` - unsubscribe token helper
 - `functions/unsubscribe.js` - unsubscribe endpoint for email footer links
@@ -73,4 +74,24 @@ Smoke test:
 curl -s https://hattrick.autojack.ai/api/signup \
   -H "Content-Type: application/json" \
   -d '{"email":"smoke+hattrick@example.com","source":"email-smoke"}'
+```
+
+## Stripe Checkout
+
+The support card uses Stripe-hosted Checkout Sessions for one-time pilot
+support payments. Card and wallet details stay in Stripe; the site only creates
+a Checkout Session and redirects to the returned URL.
+
+Required Pages secret:
+
+```bash
+/Users/jgarturo/Projects/OpenAI/autohub/node_modules/.bin/wrangler pages secret put STRIPE_SECRET_KEY --project-name=hattrick --env-file /Users/jgarturo/Projects/OpenAI/autohub/.env
+```
+
+Smoke test session creation:
+
+```bash
+curl -s https://hattrick.autojack.ai/api/checkout \
+  -H "Content-Type: application/json" \
+  -d '{"amount":500,"kind":"pilot_support","source":"stripe-smoke"}'
 ```
