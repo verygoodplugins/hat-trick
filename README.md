@@ -7,6 +7,9 @@ pilot mailing list.
 
 - `index.html` - single-file landing page
 - `functions/api/signup.js` - `POST /api/signup` waitlist endpoint
+- `functions/lib/email.js` - Hat Trick welcome email template
+- `functions/lib/tokens.js` - unsubscribe token helper
+- `functions/unsubscribe.js` - unsubscribe endpoint for email footer links
 - `functions/admin/waitlist.js` - authenticated JSON/CSV waitlist export
 - `schema/d1-schema.sql` - D1 schema for the `waitlist` table
 - `wrangler.toml` - Pages and D1 binding config
@@ -45,4 +48,29 @@ Admin endpoint requires an `ADMIN_TOKEN` Pages secret:
 
 ```bash
 curl -H "Authorization: Bearer <token>" https://hattrick.autojack.ai/admin/waitlist
+```
+
+## Welcome Email
+
+Welcome emails are copied from the AutoMail Resend flow. Signups still work
+without email configuration, but `POST /api/signup` will return
+`email_configured: false` and `email_sent: false`.
+
+Required Pages secret:
+
+```bash
+/Users/jgarturo/Projects/OpenAI/autohub/node_modules/.bin/wrangler pages secret put RESEND_API_KEY --project-name=hattrick --env-file /Users/jgarturo/Projects/OpenAI/autohub/.env
+```
+
+The configured sender is `hello@hattrick.autojack.ai`; that sender/domain must
+be verified in Resend before smoke tests will deliver. `CONFIRM_SECRET` is
+optional and falls back to `ADMIN_TOKEN` or `RESEND_API_KEY` for unsubscribe
+tokens.
+
+Smoke test:
+
+```bash
+curl -s https://hattrick.autojack.ai/api/signup \
+  -H "Content-Type: application/json" \
+  -d '{"email":"smoke+hattrick@example.com","source":"email-smoke"}'
 ```

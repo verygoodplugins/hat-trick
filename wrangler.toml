@@ -6,3 +6,9 @@ compatibility_date = "2026-05-05"
 binding = "D1"
 database_name = "hattrick-db"
 database_id = "368a9691-efdf-41db-861d-ddbeccba4ac3"
+
+[vars]
+BASE_URL = "https://hattrick.autojack.ai"
+FROM_EMAIL = "hello@hattrick.autojack.ai"
+FROM_NAME = "Hat Trick"
+SEND_WELCOME_EMAIL = "true"
