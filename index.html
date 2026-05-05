@@ -832,6 +832,39 @@
       cursor: wait;
       opacity: 0.62;
     }
+    .busker-options {
+      display: grid;
+      gap: 18px;
+      justify-items: center;
+    }
+    .busker-option {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      width: 100%;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+    .busker-option:first-child {
+      padding-top: 0;
+      border-top: 0;
+    }
+    .busker-option h4 {
+      margin: 0;
+      color: var(--text);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+    .cta-card .busker-option p {
+      max-width: 300px;
+      margin: 0;
+      font-size: 0.78rem;
+      line-height: 1.55;
+      color: var(--text-mid);
+    }
+    .busker-option .btn-card {
+      width: min(100%, 280px);
+    }
     .support-form {
       display: grid;
       gap: 16px;
@@ -1277,7 +1310,7 @@
           <span class="partner-badge">Pilot Initiative</span>
           <h3>Hat Trick</h3>
           <p>Hat Trick is the technology initiative — hardware sourcing, captive portal development, payment integration, and kit logistics. The goal is simple: give artists the infrastructure they deserve without asking them to become payment processors.</p>
-          <p>The kit ships free. The fee is minimal. The artist stays the artist.</p>
+          <p>The kit can ship free with a refundable deposit, or the busker can pay monthly and keep every tip free of Hat Trick fees. The artist stays the artist.</p>
         </div>
         <div class="partner-card reveal">
           <span class="partner-badge gold-badge">Nonprofit Partner</span>
@@ -1298,7 +1331,7 @@
     <div class="container">
       <span class="section-tag">Business Model</span>
       <h2 class="section-title">Designed to be fair.<br/>Built to be sustainable.</h2>
-      <p class="section-sub">No kit purchase for the busker. No lock-in. A refundable pilot deposit can reserve hardware, while the small infrastructure fee — typically paid by the tipper — covers satellite connectivity and platform costs.</p>
+      <p class="section-sub">Two clean options for a pilot: a free kit reserved with a refundable deposit and a small tipper-paid infrastructure fee, or a monthly device plan where Hat Trick takes no fee from tips.</p>
       <div class="model-grid">
         <div class="model-card reveal">
           <div class="model-value">£0</div>
@@ -1309,14 +1342,14 @@
         <div class="model-card highlight reveal">
           <div class="model-value">2.5%</div>
           <div class="model-unit">Infrastructure fee per tip</div>
-          <h3>Usually paid by the tipper</h3>
-          <p>Fans typically absorb the 2.5% fee as a connectivity cost — similar to airport Wi-Fi, but the revenue goes to the artist, not a landlord.</p>
+          <h3>Free-kit route</h3>
+          <p>Fans can absorb the fee as a connectivity cost — similar to airport Wi-Fi, but the revenue goes to the artist, not a landlord.</p>
         </div>
         <div class="model-card reveal">
-          <div class="model-value gold">~£112</div>
-          <div class="model-unit">Monthly yield per kit</div>
-          <h3>At £4,500/mo tip volume</h3>
-          <p>Pilot economics at a busy venue. At higher tip volumes, the yield per kit scales proportionally with no additional cost to the artist.</p>
+          <div class="model-value gold">£49/mo</div>
+          <div class="model-unit">Monthly device plan</div>
+          <h3>No Hat Trick fee on tips</h3>
+          <p>The busker pays for the device directly. Hat Trick can set the tip infrastructure fee to 0%, so more of every fan payment reaches the artist.</p>
         </div>
       </div>
       <div class="model-breakdown reveal">
@@ -1352,10 +1385,20 @@
         <div class="cta-card reveal">
           <span class="cta-icon">🎸</span>
           <h3>I'm a Busker</h3>
-          <p>Reserve a pilot kit with a refundable deposit. It still ships free. You keep the tips. The tech handles the payment flow — you stay focused on the music.</p>
-          <div class="support-form">
-            <button type="button" class="btn-card" id="deposit-button">Reserve with £100 Deposit</button>
-            <p class="checkout-status" id="deposit-status" role="status" aria-live="polite"></p>
+          <p>Choose the pilot model that fits your pitch. The tech handles the payment flow — you stay focused on the music.</p>
+          <div class="busker-options">
+            <div class="busker-option">
+              <h4>Free kit + refundable deposit</h4>
+              <p>Reserve hardware with £100 backstop. The kit still ships free, and the small infrastructure fee can be paid by tippers.</p>
+              <button type="button" class="btn-card" id="deposit-button">Reserve with £100 Deposit</button>
+              <p class="checkout-status" id="deposit-status" role="status" aria-live="polite"></p>
+            </div>
+            <div class="busker-option">
+              <h4>Monthly device plan</h4>
+              <p>Pay £49/mo for the kit instead. Hat Trick takes no infrastructure fee from your tips.</p>
+              <button type="button" class="btn-card" id="monthly-button">Start £49/mo Plan</button>
+              <p class="checkout-status" id="monthly-status" role="status" aria-live="polite"></p>
+            </div>
             <a href="mailto:pilot@hattrick.autojack.ai?subject=Busker+Pilot+Application" class="support-alt">Apply by email</a>
           </div>
         </div>
@@ -1425,15 +1468,24 @@
     const checkoutParams = new URLSearchParams(window.location.search);
     const checkoutStatus = document.getElementById('checkout-status');
     const depositStatus = document.getElementById('deposit-status');
+    const monthlyStatus = document.getElementById('monthly-status');
     const checkoutKind = checkoutParams.get('checkout_kind');
-    const checkoutTarget =
-      checkoutKind === 'kit_deposit' ? depositStatus : checkoutStatus;
+    const checkoutTargets = {
+      kit_deposit: depositStatus,
+      device_monthly: monthlyStatus,
+    };
+    const checkoutTarget = checkoutTargets[checkoutKind] || checkoutStatus;
     if (checkoutTarget && checkoutParams.get('checkout') === 'success') {
       checkoutTarget.className = 'checkout-status success';
+      const checkoutMessages = {
+        kit_deposit:
+          'Deposit checkout complete. We will follow up about the pilot kit.',
+        device_monthly:
+          'Monthly device plan started. We will follow up about the pilot kit.',
+      };
       checkoutTarget.textContent =
-        checkoutKind === 'kit_deposit'
-          ? 'Deposit checkout complete. We will follow up about the pilot kit.'
-          : 'Payment complete. Thank you for backing the pilot.';
+        checkoutMessages[checkoutKind] ||
+        'Payment complete. Thank you for backing the pilot.';
     } else if (checkoutTarget && checkoutParams.get('checkout') === 'cancelled') {
       checkoutTarget.className = 'checkout-status';
       checkoutTarget.textContent = 'Checkout cancelled.';
@@ -1455,6 +1507,7 @@
     const amountButtons = document.querySelectorAll('.support-amount');
     const checkoutButton = document.getElementById('checkout-button');
     const depositButton = document.getElementById('deposit-button');
+    const monthlyButton = document.getElementById('monthly-button');
     let selectedAmount = 2500;
 
     amountButtons.forEach(button => {
@@ -1499,6 +1552,16 @@
         source: 'busker-card',
         button: depositButton,
         status: depositStatus,
+      });
+    });
+
+    monthlyButton?.addEventListener('click', () => {
+      startCheckout({
+        amount: 4900,
+        kind: 'device_monthly',
+        source: 'busker-monthly-card',
+        button: monthlyButton,
+        status: monthlyStatus,
       });
     });
 

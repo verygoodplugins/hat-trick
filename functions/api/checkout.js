@@ -1,8 +1,17 @@
 const STRIPE_API_VERSION = '2026-02-25.clover';
 const STRIPE_CHECKOUT_URL = 'https://api.stripe.com/v1/checkout/sessions';
-const SUPPORTED_AMOUNTS = new Set([500, 1000, 2500, 5000, 10000, 25000]);
+const PILOT_SUPPORT_AMOUNTS = new Set([500, 1000, 2500, 5000, 10000, 25000]);
+const FIXED_KIND_AMOUNTS = new Map([
+  ['kit_deposit', 10000],
+  ['device_monthly', 4900],
+]);
 const SUPPORTED_CURRENCIES = new Set(['gbp']);
-const CHECKOUT_KINDS = new Set(['pilot_support', 'kit_deposit', 'tip_demo']);
+const CHECKOUT_KINDS = new Set([
+  'pilot_support',
+  'kit_deposit',
+  'device_monthly',
+  'tip_demo',
+]);
 
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -23,7 +32,7 @@ function getBaseUrl(request, env) {
 function normalizeAmount(value) {
   const amount = Number.parseInt(String(value || ''), 10);
 
-  if (!SUPPORTED_AMOUNTS.has(amount)) {
+  if (!Number.isFinite(amount) || amount < 100) {
     return null;
   }
 
@@ -37,11 +46,29 @@ function normalizeKind(value) {
 }
 
 function validateAmountForKind(kind, amount) {
-  if (kind === 'kit_deposit' && amount !== 10000) {
-    return false;
+  const fixedAmount = FIXED_KIND_AMOUNTS.get(kind);
+
+  if (fixedAmount) {
+    return amount === fixedAmount;
   }
 
-  return true;
+  return PILOT_SUPPORT_AMOUNTS.has(amount);
+}
+
+function isSubscriptionKind(kind) {
+  return kind === 'device_monthly';
+}
+
+function getTipFeeModel(kind) {
+  if (kind === 'device_monthly') {
+    return 'no_hat_trick_tip_fee';
+  }
+
+  return 'tipper_paid_infrastructure_fee';
+}
+
+function getHatTrickTipFeePercent(kind) {
+  return kind === 'device_monthly' ? '0' : '2.5';
 }
 
 function getCurrency(env) {
@@ -55,6 +82,14 @@ function getCheckoutCopy(kind) {
     return {
       name: 'Hat Trick Pilot Kit Deposit',
       description: 'Refundable deposit to reserve a free Hat Trick pilot kit.',
+    };
+  }
+
+  if (kind === 'device_monthly') {
+    return {
+      name: 'Hat Trick Monthly Device Plan',
+      description:
+        'Monthly pilot kit plan with no Hat Trick infrastructure fee on tips.',
     };
   }
 
@@ -73,10 +108,13 @@ function getCheckoutCopy(kind) {
   };
 }
 
-function appendLineItem(params, { amount, currency, copy }) {
+function appendLineItem(params, { amount, currency, copy, interval = null }) {
   params.set('line_items[0][quantity]', '1');
   params.set('line_items[0][price_data][currency]', currency);
   params.set('line_items[0][price_data][unit_amount]', String(amount));
+  if (interval) {
+    params.set('line_items[0][price_data][recurring][interval]', interval);
+  }
   params.set('line_items[0][price_data][product_data][name]', copy.name);
   params.set(
     'line_items[0][price_data][product_data][description]',
@@ -112,10 +150,16 @@ export async function onRequestPost({ request, env }) {
   const baseUrl = getBaseUrl(request, env);
   const currency = getCurrency(env);
   const copy = getCheckoutCopy(kind);
+  const isSubscription = isSubscriptionKind(kind);
+  const refundable = kind === 'kit_deposit' ? 'true' : 'false';
+  const tipFeeModel = getTipFeeModel(kind);
+  const tipFeePercent = getHatTrickTipFeePercent(kind);
   const params = new URLSearchParams();
 
-  params.set('mode', 'payment');
-  params.set('submit_type', kind === 'pilot_support' ? 'donate' : 'pay');
+  params.set('mode', isSubscription ? 'subscription' : 'payment');
+  if (!isSubscription) {
+    params.set('submit_type', kind === 'pilot_support' ? 'donate' : 'pay');
+  }
   params.set('client_reference_id', `hattrick:${kind}:${amount}`);
   params.set(
     'success_url',
@@ -127,19 +171,40 @@ export async function onRequestPost({ request, env }) {
   );
   params.set('metadata[project]', 'hat-trick');
   params.set('metadata[kind]', kind);
-  params.set('metadata[refundable]', kind === 'kit_deposit' ? 'true' : 'false');
+  params.set('metadata[refundable]', refundable);
+  params.set('metadata[tip_fee_model]', tipFeeModel);
+  params.set('metadata[hat_trick_tip_fee_percent]', tipFeePercent);
   params.set(
     'metadata[source]',
     String(body.source || 'hattrick-site').slice(0, 80)
   );
-  params.set('payment_intent_data[metadata][project]', 'hat-trick');
-  params.set('payment_intent_data[metadata][kind]', kind);
-  params.set(
-    'payment_intent_data[metadata][refundable]',
-    kind === 'kit_deposit' ? 'true' : 'false'
-  );
 
-  appendLineItem(params, { amount, currency, copy });
+  if (isSubscription) {
+    params.set('subscription_data[metadata][project]', 'hat-trick');
+    params.set('subscription_data[metadata][kind]', kind);
+    params.set('subscription_data[metadata][refundable]', refundable);
+    params.set('subscription_data[metadata][tip_fee_model]', tipFeeModel);
+    params.set(
+      'subscription_data[metadata][hat_trick_tip_fee_percent]',
+      tipFeePercent
+    );
+  } else {
+    params.set('payment_intent_data[metadata][project]', 'hat-trick');
+    params.set('payment_intent_data[metadata][kind]', kind);
+    params.set('payment_intent_data[metadata][refundable]', refundable);
+    params.set('payment_intent_data[metadata][tip_fee_model]', tipFeeModel);
+    params.set(
+      'payment_intent_data[metadata][hat_trick_tip_fee_percent]',
+      tipFeePercent
+    );
+  }
+
+  appendLineItem(params, {
+    amount,
+    currency,
+    copy,
+    interval: isSubscription ? 'month' : null,
+  });
 
   const response = await fetch(STRIPE_CHECKOUT_URL, {
     method: 'POST',

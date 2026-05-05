@@ -80,7 +80,8 @@ curl -s https://hattrick.autojack.ai/api/signup \
 
 The support and busker cards use Stripe-hosted Checkout Sessions. Card and
 wallet details stay in Stripe; the site only creates a Checkout Session and
-redirects to the returned URL.
+redirects to the returned URL. Pilot support and kit deposits are one-time
+payments; the monthly device plan creates a Stripe Billing subscription.
 
 Required Pages secret:
 
@@ -102,4 +103,12 @@ Refundable kit deposit smoke test:
 curl -s https://hattrick.autojack.ai/api/checkout \
   -H "Content-Type: application/json" \
   -d '{"amount":10000,"kind":"kit_deposit","source":"deposit-smoke"}'
+```
+
+Monthly device-plan smoke test:
+
+```bash
+curl -s https://hattrick.autojack.ai/api/checkout \
+  -H "Content-Type: application/json" \
+  -d '{"amount":4900,"kind":"device_monthly","source":"monthly-smoke"}'
 ```
