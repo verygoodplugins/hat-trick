@@ -27,6 +27,18 @@
 
     html { scroll-behavior: smooth; }
 
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     body {
       font-family: 'Space Grotesk', sans-serif;
       background: var(--bg);
@@ -815,6 +827,107 @@
     }
     .cta-card:hover .btn-card { background: var(--cyan); color: var(--bg); }
 
+    .waitlist-panel {
+      margin-top: 34px;
+      padding: 34px;
+      background:
+        linear-gradient(135deg, rgba(0,229,255,0.08), rgba(255,184,0,0.04)),
+        var(--bg);
+      border: 1px solid var(--border-c);
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+      gap: 32px;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .waitlist-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.08) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(90deg, black, transparent 72%);
+      pointer-events: none;
+    }
+    .waitlist-copy,
+    .waitlist-form {
+      position: relative;
+      z-index: 1;
+    }
+    .waitlist-copy span {
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.64rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+    .waitlist-copy h3 {
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    .waitlist-copy p {
+      color: var(--text-mid);
+      max-width: 480px;
+      font-size: 0.94rem;
+    }
+    .waitlist-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+    }
+    .waitlist-input {
+      min-width: 0;
+      background: rgba(8,10,16,0.72);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      padding: 16px 18px;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .waitlist-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(0,229,255,0.12);
+    }
+    .waitlist-input::placeholder { color: var(--text-low); }
+    .waitlist-submit {
+      border: 0;
+      background: var(--cyan);
+      color: var(--bg);
+      padding: 0 28px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .waitlist-submit:hover { transform: translateY(-1px); }
+    .waitlist-submit:disabled {
+      cursor: wait;
+      opacity: 0.62;
+      transform: none;
+    }
+    .waitlist-status {
+      grid-column: 1 / -1;
+      min-height: 22px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--text-mid);
+    }
+    .waitlist-status.success { color: var(--cyan); }
+    .waitlist-status.error { color: var(--gold); }
+
     /* ── FOOTER ── */
     footer {
       background: var(--bg);
@@ -886,6 +999,9 @@
       .nav-links { display: none; }
       section { padding: 72px 24px; }
       .problem-grid, .tech-inner, .partners-grid, .model-grid, .cta-grid { grid-template-columns: 1fr; }
+      .waitlist-panel, .waitlist-form { grid-template-columns: 1fr; }
+      .waitlist-panel { padding: 28px; }
+      .waitlist-submit { min-height: 52px; }
       .venues-timeline { grid-template-columns: 1fr; }
       .venues-timeline::before { display: none; }
       .how-flow {
@@ -1203,6 +1319,19 @@
           <a href="mailto:hello@hattrick.autojack.ai?subject=Supporting+Hat+Trick" class="btn-card">Get in Touch</a>
         </div>
       </div>
+      <div class="waitlist-panel reveal">
+        <div class="waitlist-copy">
+          <span>Pilot Mailing List</span>
+          <h3>Stay close to the first field test.</h3>
+          <p>Get the build notes, venue updates, and artist onboarding calls as Hat Trick moves from concept to live fringe pilot.</p>
+        </div>
+        <form class="waitlist-form" id="waitlist-form">
+          <label class="sr-only" for="waitlist-email">Email address</label>
+          <input class="waitlist-input" id="waitlist-email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required />
+          <button class="waitlist-submit" type="submit">Join List</button>
+          <p class="waitlist-status" id="waitlist-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
     </div>
   </section>
 
@@ -1240,6 +1369,40 @@
       });
     }, { threshold: 0.1 });
     reveals.forEach(el => observer.observe(el));
+
+    const waitlistForm = document.getElementById('waitlist-form');
+    const waitlistStatus = document.getElementById('waitlist-status');
+    waitlistForm?.addEventListener('submit', async event => {
+      event.preventDefault();
+      const submit = waitlistForm.querySelector('.waitlist-submit');
+      const email = new FormData(waitlistForm).get('email');
+
+      waitlistStatus.className = 'waitlist-status';
+      waitlistStatus.textContent = 'Connecting to the pilot list...';
+      submit.disabled = true;
+
+      try {
+        const response = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, source: 'hattrick-landing' }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Signup failed.');
+        }
+        waitlistStatus.className = 'waitlist-status success';
+        waitlistStatus.textContent = data.position
+          ? `${data.message} Position ${data.position}.`
+          : data.message;
+        waitlistForm.reset();
+      } catch (error) {
+        waitlistStatus.className = 'waitlist-status error';
+        waitlistStatus.textContent = error.message || 'Signup failed.';
+      } finally {
+        submit.disabled = false;
+      }
+    });
   </script>
 </body>
 </html>

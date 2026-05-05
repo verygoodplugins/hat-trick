@@ -1,3 +1,8 @@
 name = "hattrick"
 pages_build_output_dir = "."
 compatibility_date = "2026-05-05"
+
+[[d1_databases]]
+binding = "D1"
+database_name = "hattrick-db"
+database_id = "368a9691-efdf-41db-861d-ddbeccba4ac3"
