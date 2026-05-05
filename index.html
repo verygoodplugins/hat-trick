@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hat Trick — The Street Just Got Connected</title>
+  <meta name="description" content="Hat Trick brings satellite-powered cashless tipping to street buskers at fringe festivals. Starlink Mini Wi-Fi, tip to connect, artists get paid." />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080A10;
+      --bg2:       #0D0F18;
+      --bg3:       #111420;
+      --cyan:      #00E5FF;
+      --cyan-dim:  rgba(0, 229, 255, 0.15);
+      --cyan-glow: rgba(0, 229, 255, 0.06);
+      --gold:      #FFB800;
+      --gold-dim:  rgba(255, 184, 0, 0.15);
+      --text:      #E2E8F4;
+      --text-mid:  rgba(226, 232, 244, 0.6);
+      --text-low:  rgba(226, 232, 244, 0.3);
+      --border:    rgba(226, 232, 244, 0.08);
+      --border-c:  rgba(0, 229, 255, 0.2);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── GRID BG ── */
+    .grid-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 80%);
+      pointer-events: none;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 200;
+      padding: 20px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.4s, border-color 0.4s, padding 0.3s;
+      border-bottom: 1px solid transparent;
+    }
+    nav.scrolled {
+      background: rgba(8, 10, 16, 0.95);
+      border-bottom-color: var(--border);
+      backdrop-filter: blur(16px);
+      padding: 14px 60px;
+    }
+    .nav-logo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-logo .logo-mark {
+      width: 30px;
+      height: 30px;
+      border: 2px solid var(--cyan);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: var(--cyan);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      animation: pulse-ring 3s ease-in-out infinite;
+    }
+    .nav-logo .hat { color: var(--cyan); }
+    .nav-links { display: flex; gap: 36px; list-style: none; }
+    .nav-links a {
+      color: var(--text-mid);
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--cyan); }
+    .nav-cta {
+      background: transparent;
+      border: 1px solid var(--cyan);
+      color: var(--cyan) !important;
+      padding: 8px 22px;
+      font-size: 0.75rem !important;
+      letter-spacing: 0.12em !important;
+      text-transform: uppercase !important;
+      text-decoration: none;
+      font-weight: 600 !important;
+      transition: background 0.3s, color 0.3s !important;
+    }
+    .nav-cta:hover { background: var(--cyan) !important; color: var(--bg) !important; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 140px 40px 100px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-glow {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(ellipse, rgba(0,229,255,0.05) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .hero-signal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .signal-ring {
+      position: absolute;
+      border: 1px solid var(--cyan);
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      animation: signal-expand 4s ease-out infinite;
+    }
+    .signal-ring:nth-child(1) { width: 120px; height: 120px; animation-delay: 0s; }
+    .signal-ring:nth-child(2) { width: 240px; height: 240px; animation-delay: 0.8s; }
+    .signal-ring:nth-child(3) { width: 380px; height: 380px; animation-delay: 1.6s; }
+    .signal-ring:nth-child(4) { width: 520px; height: 520px; animation-delay: 2.4s; }
+
+    @keyframes signal-expand {
+      0% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.8); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.1); }
+    }
+
+    .hero-eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fade-up 0.8s ease forwards 0.3s;
+    }
+    .hero-eyebrow span {
+      display: inline-block;
+      width: 24px;
+      height: 1px;
+      background: var(--cyan);
+      vertical-align: middle;
+      margin: 0 12px;
+    }
+    .hero h1 {
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fade-up 0.8s ease forwards 0.5s;
+    }
+    .hero h1 .accent { color: var(--cyan); }
+    .hero h1 .accent-gold { color: var(--gold); }
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--text-mid);
+      max-width: 580px;
+      line-height: 1.75;
+      margin-bottom: 52px;
+      font-weight: 400;
+      opacity: 0;
+      animation: fade-up 0.8s ease forwards 0.7s;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fade-up 0.8s ease forwards 0.9s;
+    }
+    .btn-primary {
+      display: inline-block;
+      background: var(--cyan);
+      color: var(--bg);
+      padding: 16px 44px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.3s;
+      position: relative;
+    }
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      background: var(--cyan);
+      filter: blur(12px);
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: -1;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(0,229,255,0.4); }
+    .btn-primary:hover::before { opacity: 0.5; }
+    .btn-outline {
+      display: inline-block;
+      border: 1px solid var(--border-c);
+      color: var(--text-mid);
+      padding: 16px 36px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: border-color 0.3s, color 0.3s;
+    }
+    .btn-outline:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      margin-top: 72px;
+      opacity: 0;
+      animation: fade-up 0.8s ease forwards 1.1s;
+    }
+    .hero-stat { text-align: center; }
+    .stat-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--cyan);
+      display: block;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-low);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* ── SECTION DEFAULTS ── */
+    section { padding: 100px 40px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-tag::before {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 1px;
+      background: var(--cyan);
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+    .section-sub {
+      font-size: 1rem;
+      color: var(--text-mid);
+      max-width: 560px;
+      line-height: 1.8;
+    }
+    .divider { width: 40px; height: 2px; background: var(--cyan); margin: 24px 0; }
+
+    /* ── PROBLEM ── */
+    .problem { background: var(--bg2); position: relative; overflow: hidden; }
+    .problem::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(ellipse, rgba(255,184,0,0.04) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      margin-top: 60px;
+    }
+    .problem-card {
+      background: var(--bg3);
+      padding: 48px 44px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .problem-card:hover { border-color: var(--border-c); }
+    .problem-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+    }
+    .problem-card.cash::before { background: var(--gold); }
+    .problem-card.signal::before { background: var(--cyan); }
+    .problem-icon {
+      font-family: 'Space Mono', monospace;
+      font-size: 2.5rem;
+      color: var(--gold);
+      margin-bottom: 24px;
+      opacity: 0.9;
+    }
+    .problem-card.signal .problem-icon { color: var(--cyan); }
+    .problem-card h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }
+    .problem-card p { color: var(--text-mid); line-height: 1.8; font-size: 0.95rem; }
+    .problem-card .stat-callout {
+      margin-top: 28px;
+      padding: 16px 20px;
+      background: rgba(255,184,0,0.06);
+      border-left: 2px solid var(--gold);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--gold);
+      letter-spacing: 0.05em;
+    }
+    .problem-card.signal .stat-callout {
+      background: var(--cyan-dim);
+      border-left-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    /* ── HOW IT WORKS ── */
+    .how { background: var(--bg); position: relative; }
+    .how-flow {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 0;
+      align-items: start;
+      margin-top: 64px;
+    }
+    .flow-connector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 40px;
+    }
+    .flow-arrow {
+      width: 60px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--cyan), transparent);
+      position: relative;
+    }
+    .flow-arrow::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: -3px;
+      width: 0;
+      height: 0;
+      border-left: 6px solid var(--cyan);
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+    }
+    .flow-step { text-align: center; padding: 0 16px; }
+    .step-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--cyan);
+      margin-bottom: 20px;
+      display: block;
+    }
+    .step-icon-wrap {
+      width: 80px;
+      height: 80px;
+      border: 1px solid var(--border-c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      position: relative;
+      background: var(--bg2);
+      transition: border-color 0.3s, background 0.3s;
+    }
+    .flow-step:hover .step-icon-wrap {
+      border-color: var(--cyan);
+      background: var(--cyan-glow);
+    }
+    .step-icon-wrap .step-icon { font-size: 1.8rem; }
+    .flow-step h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+    .flow-step p { font-size: 0.88rem; color: var(--text-mid); line-height: 1.75; }
+    .how-note {
+      margin-top: 48px;
+      padding: 20px 28px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      font-size: 0.88rem;
+      color: var(--text-mid);
+      max-width: 700px;
+    }
+    .how-note strong { color: var(--cyan); }
+
+    /* ── THE TECH ── */
+    .tech { background: var(--bg2); position: relative; overflow: hidden; }
+    .tech::after {
+      content: '';
+      position: absolute;
+      bottom: -150px;
+      left: -150px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(ellipse, rgba(0,229,255,0.04) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .tech-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+    }
+    .tech-visual {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 320px;
+    }
+    .tech-node {
+      width: 120px;
+      height: 120px;
+      border: 2px solid var(--cyan);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      background: var(--bg);
+      position: relative;
+      z-index: 2;
+      animation: pulse-ring 3s ease-in-out infinite;
+    }
+    .tech-orbit {
+      position: absolute;
+      border: 1px dashed rgba(0,229,255,0.2);
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .tech-orbit-1 { width: 200px; height: 200px; }
+    .tech-orbit-2 { width: 300px; height: 300px; animation: rotate-slow 20s linear infinite; }
+    .tech-orbit-3 { width: 380px; height: 380px; animation: rotate-slow 30s linear infinite reverse; }
+    .orbit-dot {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--cyan);
+      border-radius: 50%;
+      top: -4px;
+      left: 50%;
+      margin-left: -4px;
+      box-shadow: 0 0 8px var(--cyan);
+    }
+    .orbit-dot-gold {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+      bottom: -3px;
+      right: 20%;
+      box-shadow: 0 0 6px var(--gold);
+    }
+    @keyframes rotate-slow {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    .tech-features { margin-top: 36px; display: flex; flex-direction: column; gap: 2px; }
+    .tech-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 24px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      transition: border-color 0.3s;
+    }
+    .tech-feature:hover { border-color: var(--border-c); }
+    .tech-feat-icon {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--cyan);
+      letter-spacing: 0.1em;
+      padding: 6px 8px;
+      border: 1px solid var(--border-c);
+      white-space: nowrap;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .tech-feature h4 { font-size: 0.92rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .tech-feature p { font-size: 0.84rem; color: var(--text-mid); line-height: 1.65; }
+
+    /* ── PILOT VENUES ── */
+    .venues { background: var(--bg); }
+    .venues-timeline {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      margin-top: 60px;
+      position: relative;
+    }
+    .venues-timeline::before {
+      content: '';
+      position: absolute;
+      top: 60px;
+      left: calc(16.66% + 1px);
+      right: calc(16.66% + 1px);
+      height: 1px;
+      background: linear-gradient(90deg, var(--border-c), var(--cyan), var(--border-c));
+    }
+    .venue-card {
+      padding: 48px 36px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      position: relative;
+      transition: border-color 0.3s, background 0.3s;
+    }
+    .venue-card:hover {
+      border-color: var(--border-c);
+      background: var(--bg3);
+    }
+    .venue-card.flagship {
+      border-color: var(--border-c);
+      background: linear-gradient(135deg, rgba(0,229,255,0.04), var(--bg2));
+    }
+    .venue-card.flagship::before {
+      content: 'FLAGSHIP';
+      position: absolute;
+      top: -1px;
+      right: 24px;
+      background: var(--cyan);
+      color: var(--bg);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      padding: 3px 8px;
+    }
+    .venue-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: rgba(0,229,255,0.15);
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    .venue-dot {
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--cyan);
+      border-radius: 50%;
+      background: var(--bg);
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .venue-card.flagship .venue-dot { background: var(--cyan); }
+    .venue-card h3 { font-size: 1.2rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .venue-location {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--cyan);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .venue-card p { font-size: 0.88rem; color: var(--text-mid); line-height: 1.75; }
+    .venue-tag {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 4px 12px;
+      border: 1px solid var(--border);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      color: var(--text-low);
+      text-transform: uppercase;
+    }
+
+    /* ── PARTNERS ── */
+    .partners { background: var(--bg2); }
+    .partners-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      margin-top: 60px;
+    }
+    .partner-card {
+      background: var(--bg3);
+      padding: 52px 48px;
+      border: 1px solid var(--border);
+      transition: border-color 0.3s;
+    }
+    .partner-card:hover { border-color: var(--border-c); }
+    .partner-badge {
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      border: 1px solid var(--border-c);
+      padding: 4px 12px;
+      margin-bottom: 28px;
+    }
+    .partner-badge.gold-badge { color: var(--gold); border-color: rgba(255,184,0,0.3); }
+    .partner-card h3 { font-size: 1.4rem; font-weight: 700; color: var(--text); margin-bottom: 16px; letter-spacing: -0.02em; }
+    .partner-card p { color: var(--text-mid); line-height: 1.8; font-size: 0.95rem; margin-bottom: 16px; }
+    .partner-stat {
+      margin-top: 28px;
+      display: flex;
+      gap: 32px;
+    }
+    .p-stat { }
+    .p-stat-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--gold);
+      display: block;
+    }
+    .p-stat-label {
+      font-size: 0.7rem;
+      color: var(--text-low);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* ── BUSINESS MODEL ── */
+    .model { background: var(--bg); }
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      margin-top: 60px;
+    }
+    .model-card {
+      background: var(--bg2);
+      padding: 44px 36px;
+      border: 1px solid var(--border);
+      text-align: center;
+      transition: border-color 0.3s;
+    }
+    .model-card:hover { border-color: var(--border-c); }
+    .model-card.highlight {
+      background: linear-gradient(135deg, rgba(0,229,255,0.06), var(--bg2));
+      border-color: var(--border-c);
+    }
+    .model-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--cyan);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .model-value.gold { color: var(--gold); }
+    .model-unit {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--text-low);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .model-card h3 { font-size: 0.92rem; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+    .model-card p { font-size: 0.84rem; color: var(--text-mid); line-height: 1.7; }
+    .model-breakdown {
+      margin-top: 48px;
+      padding: 32px 36px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+    }
+    .breakdown-item {
+      padding: 20px;
+      text-align: center;
+    }
+    .breakdown-item + .breakdown-item {
+      border-left: 1px solid var(--border);
+    }
+    .breakdown-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.1rem;
+      color: var(--gold);
+      display: block;
+      margin-bottom: 6px;
+    }
+    .breakdown-label { font-size: 0.72rem; color: var(--text-low); letter-spacing: 0.08em; }
+
+    /* ── GET INVOLVED ── */
+    .cta { background: var(--bg2); position: relative; overflow: hidden; }
+    .cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 60% at 20% 50%, rgba(0,229,255,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 60% at 80% 50%, rgba(255,184,0,0.03) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .cta-header { text-align: center; margin-bottom: 60px; }
+    .cta-header .section-tag { justify-content: center; }
+    .cta-header .section-tag::before { display: none; }
+    .cta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+    }
+    .cta-card {
+      background: var(--bg);
+      padding: 52px 40px;
+      border: 1px solid var(--border);
+      text-align: center;
+      transition: border-color 0.3s, transform 0.3s;
+      position: relative;
+    }
+    .cta-card:hover { border-color: var(--border-c); transform: translateY(-4px); }
+    .cta-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: transparent;
+      transition: background 0.3s;
+    }
+    .cta-card:hover::before { background: var(--cyan); }
+    .cta-icon { font-size: 2.5rem; margin-bottom: 24px; display: block; }
+    .cta-card h3 { font-size: 1.2rem; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+    .cta-card p { font-size: 0.9rem; color: var(--text-mid); line-height: 1.75; margin-bottom: 32px; }
+    .cta-card .btn-card {
+      display: inline-block;
+      border: 1px solid var(--border-c);
+      color: var(--cyan);
+      padding: 12px 28px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: background 0.3s, color 0.3s;
+    }
+    .cta-card:hover .btn-card { background: var(--cyan); color: var(--bg); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 60px 60px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+    .footer-logo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .footer-logo .hat { color: var(--cyan); }
+    .footer-links {
+      display: flex;
+      gap: 36px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .footer-links a {
+      color: var(--text-low);
+      text-decoration: none;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      transition: color 0.3s;
+    }
+    .footer-links a:hover { color: var(--cyan); }
+    .footer-copy {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text-low);
+      letter-spacing: 0.1em;
+    }
+    .footer-partners {
+      font-size: 0.78rem;
+      color: var(--text-low);
+      text-align: center;
+    }
+    .footer-partners a { color: var(--gold); text-decoration: none; }
+    .footer-partners a:hover { text-decoration: underline; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(28px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-ring {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(0,229,255,0.25); }
+      50% { box-shadow: 0 0 0 12px rgba(0,229,255,0); }
+    }
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 16px 24px; }
+      nav.scrolled { padding: 12px 24px; }
+      .nav-links { display: none; }
+      section { padding: 72px 24px; }
+      .problem-grid, .tech-inner, .partners-grid, .model-grid, .cta-grid { grid-template-columns: 1fr; }
+      .venues-timeline { grid-template-columns: 1fr; }
+      .venues-timeline::before { display: none; }
+      .how-flow {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+      .flow-connector { display: none; }
+      .hero h1 { font-size: clamp(2.2rem, 9vw, 3.5rem); }
+      .hero-stats { gap: 28px; flex-wrap: wrap; }
+      .model-breakdown { grid-template-columns: 1fr 1fr; }
+      footer { padding: 48px 24px 32px; }
+      .tech-visual { min-height: 200px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <a href="#" class="nav-logo">
+      <span class="logo-mark">HT</span>
+      <span><span class="hat">Hat</span> Trick</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#problem">The Problem</a></li>
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#venues">Pilot Venues</a></li>
+      <li><a href="#model">Business Model</a></li>
+      <li><a href="#involved" class="nav-cta">Join the Pilot</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="grid-bg"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-signal">
+      <div class="signal-ring"></div>
+      <div class="signal-ring"></div>
+      <div class="signal-ring"></div>
+      <div class="signal-ring"></div>
+    </div>
+
+    <p class="hero-eyebrow"><span></span>Busk.co Hat Trick<span></span></p>
+    <h1>The street just got<br/><span class="accent">connected.</span></h1>
+    <p class="hero-sub">Satellite-powered cashless tipping for street buskers — because festival crowds shouldn't be held back by dead cell networks or empty wallets.</p>
+    <div class="hero-actions">
+      <a href="#involved" class="btn-primary">Join the Pilot</a>
+      <a href="#how" class="btn-outline">See How It Works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="stat-num">300+</span>
+        <span class="stat-label">Buskers Surveyed</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-num">40</span>
+        <span class="stat-label">Cities</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-num">2.5%</span>
+        <span class="stat-label">Infra Fee</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-num">0</span>
+        <span class="stat-label">Upfront Cost</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section class="problem" id="problem">
+    <div class="container">
+      <span class="section-tag">The Problem</span>
+      <h2 class="section-title">Artists are losing out at<br/>the worst possible moment.</h2>
+      <p class="section-sub">Street performance is thriving — but two converging forces are quietly strangling artists' income at the moments that matter most.</p>
+      <div class="problem-grid">
+        <div class="problem-card cash reveal">
+          <div class="problem-icon">£0</div>
+          <h3>Nobody carries cash anymore.</h3>
+          <p>The UK is nearly cashless. Audiences love live busking — they just have nothing to give. A performer can draw a crowd of 200 people at a fringe festival and walk away with empty pockets because the appreciation was real but the coins weren't there.</p>
+          <div class="stat-callout">70%+ of UK adults rarely or never carry cash — ONS 2024</div>
+        </div>
+        <div class="problem-card signal reveal">
+          <div class="problem-icon">///</div>
+          <h3>Festival cell networks collapse.</h3>
+          <p>At peak fringe events — Edinburgh Royal Mile, Brighton seafront, Avignon's squares — thousands of smartphones compete for the same overloaded cell towers. QR code payments fail. Mobile wallets time out. Artists who do have a card reader watch it spin to no avail.</p>
+          <div class="stat-callout">Cell congestion causes &gt;80% payment failure at peak festival hours</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how" id="how">
+    <div class="container">
+      <span class="section-tag">How It Works</span>
+      <h2 class="section-title">Tip first. Get connected.<br/>Everyone wins.</h2>
+      <p class="section-sub">A dead-simple flow that turns the crowd's Wi-Fi need into a funding mechanism for artists.</p>
+      <div class="how-flow">
+        <div class="flow-step reveal">
+          <span class="step-num">01 / ARTIST</span>
+          <div class="step-icon-wrap"><span class="step-icon">🎸</span></div>
+          <h3>Busker sets up kit</h3>
+          <p>Artist carries a Starlink Mini backpack — no install, no ISP contract. Kit ships free, pre-configured with a tip-locked Wi-Fi hotspot.</p>
+        </div>
+        <div class="flow-connector">
+          <div class="flow-arrow"></div>
+        </div>
+        <div class="flow-step reveal">
+          <span class="step-num">02 / FAN</span>
+          <div class="step-icon-wrap"><span class="step-icon">📱</span></div>
+          <h3>Fan connects & tips</h3>
+          <p>Audience member joins the hotspot. A captive portal prompts a tip — Stripe, PayPal, Apple Pay, or QR. Any amount. The artist gets paid instantly.</p>
+        </div>
+        <div class="flow-connector">
+          <div class="flow-arrow"></div>
+        </div>
+        <div class="flow-step reveal">
+          <span class="step-num">03 / CONNECTED</span>
+          <div class="step-icon-wrap"><span class="step-icon">🛰️</span></div>
+          <h3>Fan gets 20 min Wi-Fi</h3>
+          <p>After tipping, the fan gets around 20 minutes of whitelisted satellite internet access. Busker gets paid. Fan gets connected. Festival buzz continues.</p>
+        </div>
+      </div>
+      <div class="how-note reveal">
+        <strong>The infrastructure fee</strong> — typically 2.5%, usually absorbed by the tipper — covers Starlink connectivity costs. There's no charge to the busker and no minimum tip enforced. Hat Trick is a tool for artists, not a toll booth.
+      </div>
+    </div>
+  </section>
+
+  <!-- THE TECH -->
+  <section class="tech" id="tech">
+    <div class="container">
+      <div class="tech-inner">
+        <div>
+          <span class="section-tag">The Technology</span>
+          <h2 class="section-title">Satellite-resilient.<br/>Festival-proof.</h2>
+          <div class="divider"></div>
+          <p class="section-sub">Hat Trick runs on Starlink Mini — SpaceX's most portable ground station. It bypasses terrestrial cell networks entirely. No tower congestion, no dead zones, no payment failures.</p>
+          <div class="tech-features">
+            <div class="tech-feature reveal">
+              <span class="tech-feat-icon">LEO</span>
+              <div>
+                <h4>Low-Earth Orbit Satellite</h4>
+                <p>Starlink's constellation operates at ~550km altitude — 20× closer than traditional geostationary satellites. Low latency, high resilience, works anywhere with sky visibility.</p>
+              </div>
+            </div>
+            <div class="tech-feature reveal">
+              <span class="tech-feat-icon">KIT</span>
+              <div>
+                <h4>Backpack Form Factor</h4>
+                <p>The Starlink Mini dish and router fits in a standard backpack. Busker wears it or props it nearby. No tools, no mast, no permissions needed. Setup in under 2 minutes.</p>
+              </div>
+            </div>
+            <div class="tech-feature reveal">
+              <span class="tech-feat-icon">PAY</span>
+              <div>
+                <h4>Captive Portal Payment Flow</h4>
+                <p>Hardware-locked tip-only Wi-Fi flow. Fan joins hotspot, portal opens, tip processed via Stripe/PayPal/Apple Pay, Wi-Fi timer starts. No app download required.</p>
+              </div>
+            </div>
+            <div class="tech-feature reveal">
+              <span class="tech-feat-icon">SEC</span>
+              <div>
+                <h4>Locked to Tip Flow</h4>
+                <p>The kit is hardware and software locked. It can only operate as a tip-gateway Wi-Fi hotspot — no general internet misuse, no liability for the busker or festival.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tech-visual reveal">
+          <div class="tech-orbit tech-orbit-3"><div class="orbit-dot-gold"></div></div>
+          <div class="tech-orbit tech-orbit-2"><div class="orbit-dot"></div></div>
+          <div class="tech-orbit tech-orbit-1"></div>
+          <div class="tech-node">🛰️</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILOT VENUES -->
+  <section class="venues" id="venues">
+    <div class="container">
+      <span class="section-tag">Pilot Venue Path</span>
+      <h2 class="section-title">From Brighton to Edinburgh,<br/>one fringe at a time.</h2>
+      <p class="section-sub">Hat Trick launches at three of Europe's most high-density street performance environments — each chosen to stress-test different crowd profiles and payment behaviours.</p>
+      <div class="venues-timeline">
+        <div class="venue-card reveal">
+          <div class="venue-num">01</div>
+          <div class="venue-dot"></div>
+          <h3>Brighton Fringe</h3>
+          <div class="venue-location">Brighton, England · May</div>
+          <p>UK's largest independent arts festival. Dense seafront performance zones with predictable cell congestion during peak weekend evenings. Ideal first deployment to calibrate the tip flow and gather artist feedback.</p>
+          <span class="venue-tag">Phase 1 · Proof of Concept</span>
+        </div>
+        <div class="venue-card reveal">
+          <div class="venue-num">02</div>
+          <div class="venue-dot"></div>
+          <h3>Avignon Off</h3>
+          <div class="venue-location">Avignon, France · July</div>
+          <p>1,300+ companies, 100,000+ visitors. The street performance density in the historic city centre makes cell networks essentially non-functional for days. An international context tests multi-currency tipping and cross-border payment rails.</p>
+          <span class="venue-tag">Phase 2 · International</span>
+        </div>
+        <div class="venue-card flagship reveal">
+          <div class="venue-num">03</div>
+          <div class="venue-dot"></div>
+          <h3>Edinburgh Royal Mile</h3>
+          <div class="venue-location">Edinburgh, Scotland · August</div>
+          <p>The world's largest arts festival. The Royal Mile during Fringe is the ultimate proof-of-concept environment — the highest busker density, the biggest crowds, the most critical infrastructure test. This is the flagship deployment.</p>
+          <span class="venue-tag">Phase 3 · Flagship</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTNERS -->
+  <section class="partners" id="partners">
+    <div class="container">
+      <span class="section-tag">Partners</span>
+      <h2 class="section-title">Built with people who<br/>know the street.</h2>
+      <div class="partners-grid">
+        <div class="partner-card reveal">
+          <span class="partner-badge">Pilot Initiative</span>
+          <h3>Hat Trick</h3>
+          <p>Hat Trick is the technology initiative — hardware sourcing, captive portal development, payment integration, and kit logistics. The goal is simple: give artists the infrastructure they deserve without asking them to become payment processors.</p>
+          <p>The kit ships free. The fee is minimal. The artist stays the artist.</p>
+        </div>
+        <div class="partner-card reveal">
+          <span class="partner-badge gold-badge">Nonprofit Partner</span>
+          <h3>The Busking Project<br/>/ busk.co CIC</h3>
+          <p>Nick and The Busking Project bring 300+ busker relationships across 40 cities, 30 countries, and 10 languages. As a Community Interest Company, busk.co's mandate is to support street artists — not monetise them. That alignment is what makes Hat Trick ethical, not just viable.</p>
+          <div class="partner-stat">
+            <div class="p-stat"><span class="p-stat-num">300+</span><div class="p-stat-label">Buskers</div></div>
+            <div class="p-stat"><span class="p-stat-num">40</span><div class="p-stat-label">Cities</div></div>
+            <div class="p-stat"><span class="p-stat-num">30</span><div class="p-stat-label">Countries</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUSINESS MODEL -->
+  <section class="model" id="model">
+    <div class="container">
+      <span class="section-tag">Business Model</span>
+      <h2 class="section-title">Designed to be fair.<br/>Built to be sustainable.</h2>
+      <p class="section-sub">No upfront cost to the busker. No lock-in. A small infrastructure fee — typically paid by the tipper — covers satellite connectivity and platform costs.</p>
+      <div class="model-grid">
+        <div class="model-card reveal">
+          <div class="model-value">£0</div>
+          <div class="model-unit">Upfront cost to busker</div>
+          <h3>Kit ships free</h3>
+          <p>Hardware-leased on a Square-style model. Busker never pays for the kit. No deposits. No contracts.</p>
+        </div>
+        <div class="model-card highlight reveal">
+          <div class="model-value">2.5%</div>
+          <div class="model-unit">Infrastructure fee per tip</div>
+          <h3>Usually paid by the tipper</h3>
+          <p>Fans typically absorb the 2.5% fee as a connectivity cost — similar to airport Wi-Fi, but the revenue goes to the artist, not a landlord.</p>
+        </div>
+        <div class="model-card reveal">
+          <div class="model-value gold">~£112</div>
+          <div class="model-unit">Monthly yield per kit</div>
+          <h3>At £4,500/mo tip volume</h3>
+          <p>Pilot economics at a busy venue. At higher tip volumes, the yield per kit scales proportionally with no additional cost to the artist.</p>
+        </div>
+      </div>
+      <div class="model-breakdown reveal">
+        <div class="breakdown-item">
+          <span class="breakdown-val">Starlink Mini</span>
+          <span class="breakdown-label">Connectivity Hardware</span>
+        </div>
+        <div class="breakdown-item">
+          <span class="breakdown-val">Stripe / PayPal</span>
+          <span class="breakdown-label">Payment Rails</span>
+        </div>
+        <div class="breakdown-item">
+          <span class="breakdown-val">Captive Portal</span>
+          <span class="breakdown-label">Access Gateway</span>
+        </div>
+        <div class="breakdown-item">
+          <span class="breakdown-val">Hat Trick</span>
+          <span class="breakdown-label">Kit &amp; Ops</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GET INVOLVED -->
+  <section class="cta" id="involved">
+    <div class="container">
+      <div class="cta-header">
+        <span class="section-tag">Get Involved</span>
+        <h2 class="section-title">The pilot is open.</h2>
+        <p class="section-sub" style="margin: 0 auto;">Whether you play on the street, programme a festival, or want to back an initiative that keeps artists paid — there's a place for you here.</p>
+      </div>
+      <div class="cta-grid">
+        <div class="cta-card reveal">
+          <span class="cta-icon">🎸</span>
+          <h3>I'm a Busker</h3>
+          <p>Apply for a pilot kit. It ships free. You keep the tips. The tech handles the payment flow — you stay focused on the music.</p>
+          <a href="mailto:pilot@hattrick.autojack.ai?subject=Busker+Pilot+Application" class="btn-card">Apply for a Kit</a>
+        </div>
+        <div class="cta-card reveal">
+          <span class="cta-icon">🎪</span>
+          <h3>I Programme a Festival</h3>
+          <p>Bring Hat Trick to your venue. We'll manage the hardware, the logistics, and the artist onboarding. You provide the performances.</p>
+          <a href="mailto:festivals@hattrick.autojack.ai?subject=Festival+Partnership" class="btn-card">Partner With Us</a>
+        </div>
+        <div class="cta-card reveal">
+          <span class="cta-icon">🤝</span>
+          <h3>I Want to Support</h3>
+          <p>Investors, sponsors, and organisations aligned with independent artists' economic rights. Help us scale from three fringe pilots to a global standard.</p>
+          <a href="mailto:hello@hattrick.autojack.ai?subject=Supporting+Hat+Trick" class="btn-card">Get in Touch</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo"><span class="hat">Hat</span> Trick</div>
+    <nav class="footer-links">
+      <a href="#problem">The Problem</a>
+      <a href="#how">How It Works</a>
+      <a href="#tech">The Tech</a>
+      <a href="#venues">Pilot Venues</a>
+      <a href="#model">Business Model</a>
+      <a href="#involved">Get Involved</a>
+    </nav>
+    <p class="footer-partners">
+      A <a href="https://busk.co" target="_blank" rel="noopener">busk.co CIC</a> initiative ·
+      In partnership with <strong>The Busking Project</strong>
+    </p>
+    <p class="footer-copy">© 2026 Hat Trick · hattrick.autojack.ai · Brighton → Avignon → Edinburgh</p>
+  </footer>
+
+  <script>
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('visible'), i * 60);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
