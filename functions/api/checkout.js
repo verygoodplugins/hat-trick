@@ -12,6 +12,14 @@ const CHECKOUT_KINDS = new Set([
   'device_monthly',
   'tip_demo',
 ]);
+const CHECKOUT_BRANDING = {
+  backgroundColor: '#fff8f4',
+  borderStyle: 'rounded',
+  buttonColor: '#f2592a',
+  displayName: 'The Busking Project',
+  fontFamily: 'montserrat',
+  iconUrl: 'https://busk.co/images/icon@144.png',
+};
 
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -122,6 +130,19 @@ function appendLineItem(params, { amount, currency, copy, interval = null }) {
   );
 }
 
+function appendBrandingSettings(params) {
+  params.set(
+    'branding_settings[background_color]',
+    CHECKOUT_BRANDING.backgroundColor
+  );
+  params.set('branding_settings[border_style]', CHECKOUT_BRANDING.borderStyle);
+  params.set('branding_settings[button_color]', CHECKOUT_BRANDING.buttonColor);
+  params.set('branding_settings[display_name]', CHECKOUT_BRANDING.displayName);
+  params.set('branding_settings[font_family]', CHECKOUT_BRANDING.fontFamily);
+  params.set('branding_settings[icon][type]', 'url');
+  params.set('branding_settings[icon][url]', CHECKOUT_BRANDING.iconUrl);
+}
+
 export async function onRequestPost({ request, env }) {
   if (!env.STRIPE_SECRET_KEY) {
     return jsonResponse(
@@ -205,6 +226,7 @@ export async function onRequestPost({ request, env }) {
     copy,
     interval: isSubscription ? 'month' : null,
   });
+  appendBrandingSettings(params);
 
   const response = await fetch(STRIPE_CHECKOUT_URL, {
     method: 'POST',

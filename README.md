@@ -82,6 +82,9 @@ The support and busker cards use Stripe-hosted Checkout Sessions. Card and
 wallet details stay in Stripe; the site only creates a Checkout Session and
 redirects to the returned URL. Pilot support and kit deposits are one-time
 payments; the monthly device plan creates a Stripe Billing subscription.
+Checkout sessions override Stripe branding per session to match The Busking
+Project: coral button, warm background, Montserrat, rounded controls, and the
+white-hat icon.
 
 Required Pages secret:
 
